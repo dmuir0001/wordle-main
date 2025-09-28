@@ -28,6 +28,7 @@ function initializeGame() {
     currentWord = WordleWords.getRandomWord();  // Set this to a random word
     currentGuess = '';
     currentRow = 0;
+    numGuesses = 0;
     gameOver = false;
     gameWon = false;
     
@@ -140,6 +141,9 @@ function submitGuess() {
                 let tile = getTile(currentRow, index);
                 setTileState(tile, results[index]);
             }
+            numGuesses++;
+            updateKeyboardColors(currentGuess, results);
+            processRowReveal(currentRow, results);
             updateGameState(currentGuess.toUpperCase() === currentWord);
         } else {
             showMessage("Error: Guess is not a real word", 'error');
@@ -238,6 +242,9 @@ function updateKeyboardColors(guess, results) {
     // TODO: Apply color with priority system
     // HINT: Don't change green keys to yellow or gray
     // HINT: Don't change yellow keys to gray
+    for (let i = 0; i < guess.length; i++) {
+        updateKeyboardKey(guess[i], results[i]);
+    }
     
     console.log('Updating keyboard colors for:', guess); // Remove this line
 }
@@ -256,6 +263,12 @@ function processRowReveal(rowIndex, results) {
     
     // TODO: If all correct, trigger celebration
     // HINT: Use celebrateRow() function
+    for (let i = 0; i < results.length; i++) {
+        if (results[i] != 'correct') {
+            return;
+        }
+    }
+    celebrateRow(rowIndex);
     
     console.log('Processing row reveal for row:', rowIndex); // Remove this line
 }
@@ -276,10 +289,13 @@ function showEndGameModal(won, targetWord) {
     
     // TODO: Update statistics
     // HINT: Use updateStats() function
+    updateStats(won);
     
     // TODO: Show the modal
     // HINT: Use showModal() function
-    
+    showModal(won, targetWord, numGuesses);
+
+
     console.log('Showing end game modal. Won:', won, 'Word:', targetWord); // Remove this line
 }
 
@@ -295,9 +311,27 @@ function showEndGameModal(won, targetWord) {
  */
 function validateInput(key, currentGuess) {
     // TODO: Return false if game is over
+    if (gameOver) {
+        return false;
+    }
     
     // TODO: Handle letter keys
     // HINT: Check if currentGuess.length < WORD_LENGTH
+    if (/^[A-Z]$/.test(key)) {
+        if (currentGuess.length < WORD_LENGTH) {
+            return true;
+        }
+    } else if (key === 'ENTER') {
+        if (isGuessComplete()) {
+            return true;
+        }
+    } else if (key === 'BACKSPACE') {
+        if (currentGuess.length > 0) {
+            return true;
+        }
+    } else {
+        return false;
+    }
     
     // TODO: Handle ENTER key
     // HINT: Check if currentGuess.length === WORD_LENGTH
@@ -306,7 +340,7 @@ function validateInput(key, currentGuess) {
     // HINT: Check if currentGuess.length > 0
     
     console.log('Validating input:', key); // Remove this line
-    return true; // Replace with actual validation logic
+    //return true; // Replace with actual validation logic
 }
 
 // ========================================
